@@ -11,7 +11,7 @@ setwd(paste0(workd,currentFile))
 
 cat("Now loading the exports file from most recent file", currentFile)
 
-exportFile <- read.csv("contacts-export.csv", header=TRUE, stringsAsFactors=FALSE)
+exportFile <- read.csv("contacts-export.csv", header=TRUE, stringsAsFactors=FALSE,  na.strings="")
 
 numObs <- nrow(exportFile)
 numAdd <- nrow(exportFile[!is.na(exportFile$extras.ward), ])
@@ -36,7 +36,7 @@ addressSubset <- exportFile[(exportFile$wellFormed==1 | !is.na(exportFile$extras
 
 #Digit fields
 numGoodWards <- length(na.omit(addressSubset$extras.ward))
-numGoodAddresses <-nrow(addressSubset[addressSubset$wellFormed==1,])
+numGoodAddresses <-nrow(addressSubset[!is.na(addressSubset$extras.raw_user_address), ])
 mismatch1 <- nrow(addressSubset[addressSubset$wellFormed==0 & !is.na(addressSubset$extras.ward), ])
 mismatch2 <- nrow(addressSubset[addressSubset$wellFormed==1 & is.na(addressSubset$extras.ward), ])
 
