@@ -45,10 +45,10 @@ mismatch2 <- nrow(addressSubset[addressSubset$wellFormed==1 & is.na(addressSubse
 
 ##Engagement question
 numEng <- length(na.omit(exportFile$extras.engagement_question))
-cat(sprintf("Of %d observervations, %d or %f of the observations have answered the engagement question", numObs,numEng, numEng/numObs), "\n")
+cat(sprintf("Of %d observations, %d or %f of the observations have answered the engagement question", numObs,numEng, numEng/numObs), "\n")
 cat("Here is the breakdown of the answer to that question")
-print(table(exportFile$extras.engagement_question))
-print(table(exportFile$extras.engagement_question)/numEng)
+print(xtable(table(exportFile$extras.engagement_question)))
+print(xtable(table(exportFile$extras.engagement_question)/numEng))
 cat("\n\n")
 
 cat(sprintf("The dataset currently has %d observations, of which %d have filled out the address field, which is %f.", numObs, numAdd, numAdd/numObs), "\n\n")
