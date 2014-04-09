@@ -43,7 +43,15 @@ numGoodAddresses <-sum(addressSubset$wellFormed[!is.na(addressSubset$extras.ward
 wfform <- nrow(addressSubset[addressSubset$wellFormed==1 & !is.na(addressSubset$extras.ward), ])
 mismatch2 <- nrow(addressSubset[addressSubset$wellFormed==1 & is.na(addressSubset$extras.ward), ])
 
-cat(sprintf("The dataset currently has %d observations, of which %d have filled out the address field, which is %f", numObs, numAdd, numAdd/numObs), "\n\n")
+##Engagement question
+numEng <- length(na.omit(exportFile$extras.engagement_question))
+cat(sprintf("Of %d observervations, %d or %f of the observations have answered the engagement question", numObs,numEng, numEng/numObs), "\n")
+cat("Here is the breakdown of the answer to that question")
+print(table(exportFile$extras.engagement_question))
+print(table(exportFile$extras.engagement_question)/numEng)
+cat("\n\n")
+
+cat(sprintf("The dataset currently has %d observations, of which %d have filled out the address field, which is %f.", numObs, numAdd, numAdd/numObs), "\n\n")
 cat(sprintf("Of the addresses, there are currently %d addresses where the ward looked up went through
 of those, %d addresses that meet basic formatting requirements of **number** then **text**, which constitutes %f of all ward matches.
 
