@@ -5,7 +5,21 @@ library(timeDate)
 library(chron)
 ##Detect problems with ward lookup
 #############################
+
+
+
 workd <- "/Volumes/Optibay-1TB/RSA_RCT/QA/LiveData/VIP-LivedData/"
+
+setwd(workd)
+
+dir.create(paste0("tex_", Sys.time()))
+
+texFile <- tail(list.files(path=workd, pattern ="tex_2014.*"),1)[1]
+
+sink(file = paste0(texFile, "/dashboardDump.txt"), append = FALSE, type = c("output", "message"),
+     split = TRUE)
+
+invisible(file.copy(from="VIPTexTemplate.tex", to=paste0(texFile,"/VIPTexTemplate.tex")))
 
 exports <- list.files(path=workd, pattern ="contact_2014_[0-9].*")
 
@@ -54,7 +68,7 @@ cat("\n\n")
 ##Registration
 numReg = sum(exportFile$extras.is_registered=="true", na.rm=TRUE)
 cat(sprintf("Of %d that answered the engagement question, %d or %f of the those **engaged** have answered the registeration question.
-So we are losing %f here", numEng,numReg, numReg/numEng, (numEng-numReg)/numEng, "\n")
+So we are losing %f here", numEng,numReg, numReg/numEng, (numEng-numReg)/numEng, "\n"))
 
 
 cat(sprintf("The dataset currently has %d observations, of which %d have filled out the address field, which is %f.", numObs, numAdd, numAdd/numObs), "\n\n")
@@ -77,8 +91,28 @@ write.csv(addressSubset, file=paste0("AddressSubset","_", Sys.time(), ".csv"))
 #x <- as.xts(1:3, timeDate(exportFile$created_at))
 
 
-#strptime(exportFile$created_at[1], "Y%-%m-%d %H:%M")
+strptime(exportFile$created_at[1], format="%Y-%m-%d %R", tz="Africa/Johannesburg")
 
+exportFile$posixTime <- as.POSIXct(format(strptime(exportFile$created_at, format="%Y-%m-%d %R", tz="GMT"),tz="Africa/Johannesburg", usetz=TRUE))
 
+MyDatesTable <- table(cut(exportFile$posixTime, breaks="hour"))
 
+databyChannel <- as.data.frame.matrix(table(cut(exportFile$posixTime, breaks="hour"), as.factor(exportFile$extras.USSD_number)))
+
+names(databyChannel) <-c("c4279", "channel1", "channel2", "channel3", "channelonlyhash")
+
+databyChannel$date <- as.POSIXct(rownames(databyChannel))
+
+mcplt <- ggplot() + 
+    geom_line(data = databyChannel, aes(x = date, y = channel1, color = "Channel1")) +
+             geom_line(data = databyChannel, aes(x = date, y =channel2, color = "Channel2"))  +
+             geom_line(data = databyChannel, aes(x = date, y =channel3, color = "Channel3")) +
+             xlab('posixTime') +
+             ylab('frequency') +
+             labs(color="Channels")
+
+pdf(file = paste0(workd, texFile,"/multichannelPlot.pdf"), width= 6, height = 4)
+print(mcplt)
+dev.off()
+ sink(file = NULL)
 setwd(workd)
