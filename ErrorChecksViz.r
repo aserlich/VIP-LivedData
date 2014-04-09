@@ -51,6 +51,12 @@ print(xtable(table(exportFile$extras.engagement_question)))
 print(xtable(table(exportFile$extras.engagement_question)/numEng))
 cat("\n\n")
 
+##Registration
+numReg = sum(exportFile$extras.is_registered=="true", na.rm=TRUE)
+cat(sprintf("Of %d that answered the engagement question, %d or %f of the those **engaged** have answered the registeration question.
+So we are losing %f here", numEng,numReg, numReg/numEng, (numEng-numReg)/numEng, "\n")
+
+
 cat(sprintf("The dataset currently has %d observations, of which %d have filled out the address field, which is %f.", numObs, numAdd, numAdd/numObs), "\n\n")
 cat(sprintf("Of the addresses, there are currently %d addresses where the ward looked up went through
 of those, %d addresses that meet basic formatting requirements of **number** then **text**, which constitutes %f of all ward matches.
