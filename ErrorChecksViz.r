@@ -105,7 +105,6 @@ write.csv(addressSubset, file=paste0("AddressSubset","_", Sys.time(), ".csv"))
 
 #x <- as.xts(1:3, timeDate(exportFile$created_at))
 
-
 strptime(exportFile$created_at[1], format="%Y-%m-%d %R", tz="Africa/Johannesburg")
 
 exportFile$posixTime <- as.POSIXct(format(strptime(exportFile$created_at, format="%Y-%m-%d %R", tz="GMT"),tz="Africa/Johannesburg", usetz=TRUE))
