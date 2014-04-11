@@ -4,6 +4,8 @@ library(xts) # also pulls in zoo
 library(timeDate)
 library(chron)
 library(descr)
+library(reshape2)
+library(ggplot2)
 rm(list=ls())
 ##Detect problems with ward lookup
 #############################
