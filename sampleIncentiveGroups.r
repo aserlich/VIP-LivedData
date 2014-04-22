@@ -3,7 +3,7 @@ library(stringr)
 library(plyr)
 library(xts) # also pulls in zoo
 library(timeDate)
-library(chron)
+library(chron)%
 library(descr)
 library(reshape2)
 library(ggplot2)
@@ -26,11 +26,33 @@ cat(sprintf("Now loading the exports file from most recent file \\begin{verbatim
 exportFile <- read.csv("contacts-export.csv", header=TRUE, stringsAsFactors=FALSE,  na.strings="")
 
 #do we want twitter people and what about people that just answered the engagement question?
-elecObserveIncentive <- exportFile[exportFile$extras.is_registered %in% c("true") & exportFile$extras.delivery_class %in% c("ussd", "twitter"),
-                                   c("msisdn", "extras.is_registered", "extras.delivery_class")] 
+elecObserveIncentive <- exportFile[exportFile$is_registered %in% c("true") & exportFile$delivery_class %in% c("ussd", "twitter") & !(exportFile$msisdn %in% c("unknown")),
+                                   c("msisdn", "is_registered", "delivery_class", "USSD_number", "created_at")]
+
+rm(exportFile)
 
 #check
-elecObserveIncentive[sample(nrow(elecObserveIncentive), 30), c("msisdn", "extras.is_registered", "extras.delivery_class")]
+elecObserveIncentive[sample(nrow(elecObserveIncentive), 30), c("msisdn", "is_registered", "delivery_class", "USSD_number")]
+elecObserveIncentive$msisdn <- gsub(" ", "", elecObserveIncentive$msisdn)
+nrow(elecObserveIncentive) == length(unique(elecObserveIncentive$msisdn))
+
+source(file.path(workd, "analyzeYAL.r"))
+
+cat("There are", nrow(mobiUser), "mobi users")
+cat("There are", nrow(elecObserveIncentive), "VUMI users")
+
+elecObserveIncentive <- rbind(elecObserveIncentive, mobiUser)
+
+#remove those without valid length phone numbers
+elecObserveIncentive <- elecObserveIncentive[str_length(elecObserveIncentive$msisdn)==12, ]
+
+cat("There are", nrow(elecObserveIncentive), "total users with no errors in msisdn")
+
+#getmobuser
+
+duplicatedR <- elecObserveIncentive[duplicated(elecObserveIncentive$msisdn, fromLast=TRUE) | duplicated(elecObserveIncentive$msisdn, fromLast=FALSE) , ]
+duplicatedR <- duplicatedR[order(duplicatedR$msisdn), ]
+
 
 #divide the population into two groups of equal size (unless they are odd numbers. The the incentivzed group has one more person
 set.seed(20140422)
@@ -39,6 +61,8 @@ noInc <- sample(nrow(elecObserveIncentive),floor(nrow(elecObserveIncentive)/2))
 elecObserveIncentive$group <- NA
 elecObserveIncentive$group[noInc] <- "noIncentive"
 elecObserveIncentive$group[-noInc] <- "Incentive"
+
+elecObserveIncentive <- elecObserveIncentive[with(elecObserveIncentive, order(group, delivery_class, USSD_number)), ]
 
 #this .csv shoudl be part of the data repository on github and should be located in the main repository like the wardnums experiment
 #every additional push we do, which may add more users, will have to ignore the users already assigned to a groups

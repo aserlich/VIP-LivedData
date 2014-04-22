@@ -19,7 +19,6 @@ currentFile <-  tail(mexports,1)[1]
 
 mesDat <- read.csv(file.path(paste0("./", currentFile, "/messages-export.csv") ), stringsAsFactors=FALSE )
 
-
 ##identify unique phone numbers
 getUser <- function(df){
     phNum <- grepl("+27",as.character(df$to_addr), fixed=TRUE)
@@ -51,17 +50,40 @@ subset1 <- function(x){
 joiners <- Filter(subset1,userRecords)
 
 #order joiners messages by TimeStamp
-joinersOrder <- llply(joiners, function(x) x[order(x$timestamp),]
+joinersOrder <- llply(joiners, function(x) x[order(x$timestamp),])
+
+
+subset2 <- function(x, stillNot = c("Still not my address", "Cha, asiyilo ikheli lami","Nog nie my address nie")
+){
+    return((sum(grepl(stillNot[1],x$content, fixed=TRUE)) +
+    sum(grepl( stillNot[2], x$content, fixed=TRUE)) +
+    sum(grepl(stillNot[3],x$content, fixed=TRUE))) >0)
+   }
+
+ 
+joinersStillNot <- Filter(subset2,joinersOrder)
+
+extractStillNo <- function(x, stillNot = c("Still not my address", "Cha, asiyilo ikheli lami","Nog nie my address nie")
+){
+    c((which(grepl(stillNot[1],x$content, fixed=TRUE)),
+    sum(grepl( stillNot[2], x$content, fixed=TRUE)) +
+    sum(grepl(stillNot[3],x$content, fixed=TRUE))) >0)
+   }
+
+
+
 
 #remove everyone who has been allocated a ward
 #or has tried to enter and address twice and has gotten "still not my address"
 
-
 #find any messages that contain that string
-stillNot <- c("Still not my address", "Cha, asiyilo ikheli lami","Nog nie my address nie")
+rightCell <- which
 
 #then find the number associated with that string
 
+
+subset3 <- function(x, notMy = c("
+                      
 #Then see if anyone hit that number
 
 #If they hit any other number, then they got a ward assignment

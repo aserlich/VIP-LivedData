@@ -57,48 +57,48 @@ basicAddress <- "^[0-9]{1,5}[[:space:]]?[[:alpha:]]+"
 
 #create combined Variable for USSD channels and other channels
 exportFile$combDeliverClass <- NA
-exportFile$combDeliverClass[exportFile$extras.delivery_class %in% c("gtalk","twitter","mxit")]  <-  exportFile$extras.delivery_class[exportFile$extras.delivery_class %in% c("gtalk","twitter","mxit")]
-exportFile$combDeliverClass[exportFile$extras.delivery_class %in% c("ussd")] <- as.character(exportFile$extras.USSD_number[exportFile$extras.delivery_class %in% c("ussd")])
+exportFile$combDeliverClass[exportFile$delivery_class %in% c("gtalk","twitter","mxit")]  <-  exportFile$delivery_class[exportFile$delivery_class %in% c("gtalk","twitter","mxit")]
+exportFile$combDeliverClass[exportFile$delivery_class %in% c("ussd")] <- as.character(exportFile$USSD_number[exportFile$delivery_class %in% c("ussd")])
 
 #add column to matrix
-exportFile$wellFormed <- unlist(sapply(exportFile$extras.raw_user_address, simplify=TRUE,
+exportFile$wellFormed <- unlist(sapply(exportFile$raw_user_address, simplify=TRUE,
       function(x) grepl(x, pattern=basicAddress)
       ))
 
 #Create subset
-addressSubset <- exportFile[( !is.na(exportFile$extras.raw_user_address)| !is.na(exportFile$extras.ward)),
-           c("extras.raw_user_address","extras.raw_user_address_2", "extras.ward", "wellFormed", "combDeliverClass", "created_at")]
+addressSubset <- exportFile[( !is.na(exportFile$raw_user_address)| !is.na(exportFile$ward)),
+           c("raw_user_address","raw_user_address_2", "ward", "wellFormed", "combDeliverClass", "created_at")]
 
 #Digit fields
-numGoodWards <- length(na.omit(addressSubset$extras.ward))
-numGoodAddresses <-sum(addressSubset$wellFormed[!is.na(addressSubset$extras.ward)], na.rm =TRUE)
-wfform <- nrow(addressSubset[addressSubset$wellFormed==1 & !is.na(addressSubset$extras.ward), ])
-mismatch2 <- nrow(addressSubset[addressSubset$wellFormed==1 & is.na(addressSubset$extras.ward), ])
+numGoodWards <- length(na.omit(addressSubset$ward))
+numGoodAddresses <-sum(addressSubset$wellFormed[!is.na(addressSubset$ward)], na.rm =TRUE)
+wfform <- nrow(addressSubset[addressSubset$wellFormed==1 & !is.na(addressSubset$ward), ])
+mismatch2 <- nrow(addressSubset[addressSubset$wellFormed==1 & is.na(addressSubset$ward), ])
 
 ##Engagement question
-numEng <- length(na.omit(exportFile$extras.engagement_question))
+numEng <- length(na.omit(exportFile$engagement_question))
 cat(sprintf("Of %d observations, %d or %f of the observations have answered the engagement question", numObs,numEng, numEng/numObs), "\n")
 cat("Here is the breakdown of the answer to that question")
-print(xtable(table(exportFile$extras.engagement_question)))
-print(xtable(table(exportFile$extras.engagement_question)/numEng))
+print(xtable(table(exportFile$engagement_question)))
+print(xtable(table(exportFile$engagement_question)/numEng))
 cat("\n\n")
 
 ##Registration
-numReg = sum(exportFile$extras.is_registered %in% c("true"), na.rm=TRUE)
+numReg = sum(exportFile$is_registered %in% c("true"), na.rm=TRUE)
 cat(sprintf("Of %d that answered the engagement question, %d or %f of the those **engaged** have answered the registeration question and agreed to the T&Cs.
 So we are losing %f here", numEng,numReg, numReg/numEng, (numEng-numReg)/numEng), "\n")
 
 cat("Of those that answer the registration question --- let us look at the T&Cs, who joins")
 
-exportFile$extras.is_registered <- as.factor(exportFile$extras.is_registered)
-exportFile$extras.USSD_number<- as.factor(exportFile$extras.USSD_number)
+exportFile$is_registered <- as.factor(exportFile$is_registered)
+exportFile$USSD_number<- as.factor(exportFile$USSD_number)
 
-#exportFile[sample(nrow(exportFile),200), c("extras.delivery_class", "extras.USSD_number","combDeliverClass")]
+#exportFile[sample(nrow(exportFile),200), c("delivery_class", "USSD_number","combDeliverClass")]
 
-#regbyChannel <- with(exportFile, crosstab(extras.is_registered, extras.USSD_number, chisq=TRUE))
-regbyChannel <- with(exportFile[!is.na(exportFile$extras.delivery_class),], crosstab(extras.is_registered, extras.USSD_number, chisq=TRUE, prop.c=TRUE, prop.r=TRUE, plot=FALSE))
+#regbyChannel <- with(exportFile, crosstab(is_registered, USSD_number, chisq=TRUE))
+regbyChannel <- with(exportFile[!is.na(exportFile$delivery_class),], crosstab(is_registered, USSD_number, chisq=TRUE, prop.c=TRUE, prop.r=TRUE, plot=FALSE))
 
-regbyChannel2 <- with(exportFile[!is.na(exportFile$combDeliverClass),], crosstab(extras.is_registered, combDeliverClass, chisq=TRUE, prop.c=TRUE, prop.r=TRUE, plot=FALSE))
+regbyChannel2 <- with(exportFile[!is.na(exportFile$combDeliverClass),], crosstab(is_registered, combDeliverClass, chisq=TRUE, prop.c=TRUE, prop.r=TRUE, plot=FALSE))
 
 
 regbyChannelxtab <- xtable(regbyChannel2, caption="Accept T&Cs by Channel") #usepackage{float} in tex
@@ -110,7 +110,7 @@ print(regbyChannelxtab,
       table.placement="H", include.rownames = FALSE, size = "footnotesize", rotate.colnames=TRUE)
 #plot(regbyChannel)
 
-regbyChannel <- with(exportFile[!is.na(exportFile$extras.delivery_class),], crosstab(extras.is_registered, extras.USSD_number,
+regbyChannel <- with(exportFile[!is.na(exportFile$delivery_class),], crosstab(is_registered, USSD_number,
                                                                                      chisq=TRUE, prop.c=TRUE, prop.r=TRUE, plot=FALSE)
                      )
 
@@ -137,15 +137,15 @@ rgroupsdf$msisdn <- paste0("+",rgroupsdf$MSISDN)
 
 t1 <- merge(exportFile, rgroupsdf, by="msisdn", all.x=TRUE, all.y=TRUE)
 #get rid of the NAs -- assume they are a bug
-t1 <- t1[!is.na(t1$extras.delivery_class),]
+t1 <- t1[!is.na(t1$delivery_class),]
 #just aribritarily remove one of the duplicate records for analytical purposes 
 t2 <- t1[!duplicated(t1$msisdn, fromLast=FALSE), ]
 
-t2$wardMatch <- !is.na(t2$extras.ward)
-t2$awComp <- !is.na(t2$extras.answerwin_complete)
+t2$wardMatch <- !is.na(t2$ward)
+t2$awComp <- !is.na(t2$answerwin_complete)
 
 print(xtable(
-    with(t2[!is.na(t2$Name), ], crosstab(extras.answerwin_question_2009election, Name,
+    with(t2[!is.na(t2$Name), ], crosstab(answerwin_question_2009election, Name,
                                          chisq=TRUE, prop.c=TRUE, prop.r=TRUE, plot=FALSE)),
     caption = "Answered the Election Answer and Win question by Randomization group"
     ),
@@ -183,10 +183,10 @@ print(xtable(
 
 #if there is no second address use the first address
 addressSubset$cleanAddress <- NA
-addressSubset$cleanAddress[!is.na(addressSubset$extras.raw_user_address_2)] <- tolower(addressSubset$extras.raw_user_address_2[!is.na(addressSubset$extras.raw_user_address_2)])
+addressSubset$cleanAddress[!is.na(addressSubset$raw_user_address_2)] <- tolower(addressSubset$raw_user_address_2[!is.na(addressSubset$raw_user_address_2)])
  
-addressSubset$cleanAddress[is.na(addressSubset$extras.raw_user_address_2) & !is.na(addressSubset$extras.raw_user_address)]  <-
-                                  tolower(addressSubset$extras.raw_user_address[is.na(addressSubset$extras.raw_user_address_2) & !is.na(addressSubset$extras.raw_user_address)])
+addressSubset$cleanAddress[is.na(addressSubset$raw_user_address_2) & !is.na(addressSubset$raw_user_address)]  <-
+                                  tolower(addressSubset$raw_user_address[is.na(addressSubset$raw_user_address_2) & !is.na(addressSubset$raw_user_address)])
 
 
 cAdd <- addressSubset[!is.na(addressSubset$cleanAddress),]
@@ -198,14 +198,14 @@ wardstr <- "ward[[:blank:]]?[[0-9]{1,2}.*"
 
 wardstr2 <- "(^.*)(ward[[:blank:]]?[0-9]{1,2})(.*$)"
 
-#cAdd[grepl(mainstr, cAdd$cleanAddress), c("cleanAddress", "extras.ward","wellFormed") ]
-#cAdd[grepl(wardstr, cAdd$cleanAddress), c("cleanAddress", "extras.ward","wellFormed") ]
+#cAdd[grepl(mainstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
+#cAdd[grepl(wardstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
 
-sprintf("The number of main streets or something similar in pretoria is %d", nrow(cAdd[grepl(mainstr, cAdd$cleanAddress), c("cleanAddress", "extras.ward","wellFormed") ]
+sprintf("The number of main streets or something similar in pretoria is %d", nrow(cAdd[grepl(mainstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
                                                                                  )
         )
 
-sprintf("The number of people who enetered their ward # is %d", nrow(cAdd[grepl(wardstr, cAdd$cleanAddress), c("cleanAddress", "extras.ward","wellFormed") ]
+sprintf("The number of people who enetered their ward # is %d", nrow(cAdd[grepl(wardstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
                                                                                  )
         )
 
@@ -227,8 +227,8 @@ cAdd$otherWardInfo <- paste(wards[,2], wards[,4], sep =" ")
 
 #duplicate records
 duplicatedR <- t1[duplicated(t1$msisdn, fromLast=TRUE) | duplicated(t1$msisdn, fromLast=FALSE) , ]
-#head(duplicatedR[,c("msisdn", "extras.delivery_class", "extras.USSD_number")], 100)
-write.csv(duplicatedR[,c("msisdn", "extras.delivery_class", "extras.USSD_number")],
+#head(duplicatedR[,c("msisdn", "delivery_class", "USSD_number")], 100)
+write.csv(duplicatedR[,c("msisdn", "delivery_class", "USSD_number")],
                       file.path(rgroupsPath, "duplicatesinVumi.csv"))
 dupRec <- length(unique(duplicatedR$msisdn))
 ###########
@@ -239,12 +239,12 @@ write.csv(addressSubset, file=paste0("AddressSubset","_", Sys.time(), ".csv"))
 ########
 #answer and win questions
 ##########
-registered <- exportFile[exportFile$extras.is_registered %in% c("true"),  ]
+registered <- exportFile[exportFile$is_registered %in% c("true"),  ]
 
 cat(sprintf("\\section{Answer And Win}"), "\nHere is the data from the Answer and Win Section:")
-cat("\n", sprintf("%d people have completed all of the questions in the VIP section", length(na.omit(registered$extras.answerwin_complete)) ) ) 
+cat("\n", sprintf("%d people have completed all of the questions in the VIP section", length(na.omit(registered$answerwin_complete)) ) ) 
 
-awQuest <- c("extras.answerwin_question_gender", "extras.answerwin_question_age", "extras.answerwin_question_2009election", "extras.answerwin_question_race")
+awQuest <- c("answerwin_question_gender", "answerwin_question_age", "answerwin_question_2009election", "answerwin_question_race")
 
 for(qu in 1:length(awQuest)){
     regxtable <- tab1(registered[, awQuest[qu]], graph=FALSE)$output.table
@@ -272,7 +272,7 @@ for(qu in 1:length(awQuest)){
 }
 
 
-awFin <- length(na.omit(registered$extras.answerwin_complete))
+awFin <- length(na.omit(registered$answerwin_complete))
 cat(sprintf("At total of %d people have finished the answer and win section, answering all the questions", awFin ))
 
 
@@ -281,7 +281,7 @@ cat(sprintf("At total of %d people have finished the answer and win section, ans
 ##########
 
 cat(sprintf("\\section{VIP Section}"), "\nHere is the data from the VIP Section:\n")
-cat(sprintf("%d people have completed all of the questions in the VIP section", length(na.omit(registered$extras.vip_complete)) ), "\n") 
+cat(sprintf("%d people have completed all of the questions in the VIP section", length(na.omit(registered$vip_complete)) ), "\n") 
 
 
 vipLabels <- c("Attended protest",
@@ -298,7 +298,7 @@ vipLabels <- c("Attended protest",
 "Attended Campaign rally")
 
 
-vipQuiz <- paste0("extras.vip_question_", seq(1,12))
+vipQuiz <- paste0("vip_question_", seq(1,12))
 
 for(vp in 1:length(vipQuiz)){
     regxtable <- tab1(registered[, vipQuiz[vp]], graph=FALSE)$output.table
@@ -316,9 +316,9 @@ for(vp in 1:length(vipQuiz)){
 ##########
 cat(sprintf("\\section{What's up}"), "\nHere is the data from the What's up section")
 
-cat(sprintf("%d people have completed all of the questions in the What's Up section", length(na.omit(registered$extras.whatsup_complete)) ) ) 
+cat(sprintf("%d people have completed all of the questions in the What's Up section", length(na.omit(registered$whatsup_complete)) ) ) 
 
-wutUp <- grep("extras.whatsup_question_", names(exportFile), value=TRUE)
+wutUp <- grep("whatsup_question_", names(exportFile), value=TRUE)
 
 for(wu in 1:length(wutUp)){
     regxtable <- tab1(registered[, wutUp[wu]], graph=FALSE)$output.table
@@ -346,7 +346,7 @@ names(databyChannelUSSD) <-c("c4279", "channel1", "channel2", "channel3", "chann
 databyChannelUSSD$date <- as.POSIXct(rownames(databyChannelUSSD))
 
 #update by channel as needed -- currently for USSD only
-tcByChannel <- as.data.frame.matrix(table(cut(exportFile$posixTime, breaks="hour"), paste(as.factor(exportFile$combDeliverClass), exportFile$extras.is_registered)))
+tcByChannel <- as.data.frame.matrix(table(cut(exportFile$posixTime, breaks="hour"), paste(as.factor(exportFile$combDeliverClass), exportFile$is_registered)))
 tcByChannel <- tcByChannel[,1:ncol(tcByChannel)-1]
 
 channels <- as.vector(apply(as.matrix(c("c4279", "channel1", "channel2", "channel3","channel8","channelonlyhash", "gtalk", "mxit" , "twitter", "missing")),1,rep,3)) #trasch code
