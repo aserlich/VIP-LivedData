@@ -10,17 +10,10 @@ library(ggplot2)
 library(xtable)
 library(epicalc)
 library(stringr)
-##Detect problems with ward lookup
+#########################
+#Sample groups for incentiviation
+#April 22, 2014
 #############################
-
-##FUNCTIONS
-rename_NA <- function(x){
-  rownames(x)[is.na(rownames(x))] <- "NA"
-  colnames(x)[is.na(colnames(x))] <- "NA"
-  x
-}
-
-###
 workd <- "/Volumes/Optibay-1TB/RSA_RCT/QA/LiveData/VIP-LivedData/"
 
 setwd(workd)
