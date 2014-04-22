@@ -3,7 +3,7 @@ library(stringr)
 library(plyr)
 library(xts) # also pulls in zoo
 library(timeDate)
-library(chron)%
+library(chron)
 library(descr)
 library(reshape2)
 library(ggplot2)
@@ -27,7 +27,7 @@ exportFile <- read.csv("contacts-export.csv", header=TRUE, stringsAsFactors=FALS
 
 #do we want twitter people and what about people that just answered the engagement question?
 elecObserveIncentive <- exportFile[exportFile$is_registered %in% c("true") & exportFile$delivery_class %in% c("ussd", "twitter") & !(exportFile$msisdn %in% c("unknown")),
-                                   c("msisdn", "is_registered", "delivery_class", "USSD_number", "created_at")]
+                                   c("msisdn", "is_registered", "delivery_class", "USSD_number", "key")]
 
 rm(exportFile)
 
@@ -50,20 +50,37 @@ cat("There are", nrow(elecObserveIncentive), "total users with no errors in msis
 
 #getmobuser
 
-duplicatedR <- elecObserveIncentive[duplicated(elecObserveIncentive$msisdn, fromLast=TRUE) | duplicated(elecObserveIncentive$msisdn, fromLast=FALSE) , ]
-duplicatedR <- duplicatedR[order(duplicatedR$msisdn), ]
+#deal with duplicates
+elecObserveIncentive$duplicate <- 0
+elecObserveIncentive$duplicate[duplicated(elecObserveIncentive$msisdn, fromLast=TRUE) | duplicated(elecObserveIncentive$msisdn, fromLast=FALSE)] <- 1
 
+#elecObserveIncentive[duplicated(elecObserveIncentive$msisdn, fromLast=TRUE) | duplicated(elecObserveIncentive$msisdn, fromLast=FALSE), ]
 
 #divide the population into two groups of equal size (unless they are odd numbers. The the incentivzed group has one more person
 set.seed(20140422)
-noInc <- sample(nrow(elecObserveIncentive),floor(nrow(elecObserveIncentive)/2))
+nondups <- nrow(elecObserveIncentive) - sum(elecObserveIncentive$duplicate)
+
+dups <- sum(elecObserveIncentive$duplicate)
+
+noIncNonDups <- sample(nondups,floor(nondups/2))
+noIncDups  <- sample(dups,floor(dups/2))
+
+elecObserveIncentive <- elecObserveIncentive[elecObserveIncentive$duplicate==0, ]
+
+#I think this has been solved by the unique id and the bug found, but we could still have a duplicate from mobi
+if(dups >0) {
+elecObserveIncentiveDup <- elecObserveIncentive[elecObserveIncentive$duplicate==1, ]
+#put half of theduplicates in one and have in the other. 
+}
 
 elecObserveIncentive$group <- NA
-elecObserveIncentive$group[noInc] <- "noIncentive"
-elecObserveIncentive$group[-noInc] <- "Incentive"
+elecObserveIncentive$group[noIncNonDups] <- "noIncentive"
+elecObserveIncentive$group[-noIncNonDups] <- "Incentive"
 
 elecObserveIncentive <- elecObserveIncentive[with(elecObserveIncentive, order(group, delivery_class, USSD_number)), ]
 
 #this .csv shoudl be part of the data repository on github and should be located in the main repository like the wardnums experiment
 #every additional push we do, which may add more users, will have to ignore the users already assigned to a groups
+#only call this file once a day
 #write.csv
+write.csv(elecObserveIncentive, file = file.path(workd, paste0("monitorPush", Sys.Date(), ".csv")), row.names = FALSE)

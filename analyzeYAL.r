@@ -10,5 +10,5 @@ phonNums <- unique(yaldf$token)
 phonNums <- phonNums[!grepl("^([a-z]|01|[5-9]|1)", phonNums)]
 phonNums2 <- ifelse(grepl("^0[6-9]", phonNums), gsub("^0([6-9])", "\\+27\\1", phonNums), paste0("+", phonNums))
 
-mobiUser <- data.frame(msisdn = phonNums2, is_registered="true", delivery_class="mobi", USSD_number=NA)
+mobiUser <- data.frame(msisdn = phonNums2, is_registered="true", delivery_class="mobi", USSD_number=NA, key="NA")
 
