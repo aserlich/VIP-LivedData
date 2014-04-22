@@ -24,10 +24,7 @@ rename_NA <- function(x){
 workd <- "/Volumes/Optibay-1TB/RSA_RCT/QA/LiveData/VIP-LivedData/"
 
 setwd(workd)
-texFile <- tail(list.files(path=workd, pattern ="tex_2014.*"),1)[1]
-
 exports <- list.files(path=workd, pattern ="contact_2014_[0-9].*")
-
 currentFile <-  tail(exports,1)[1]
 setwd(paste0(workd,currentFile))
 
@@ -50,4 +47,6 @@ elecObserveIncentive$group <- NA
 elecObserveIncentive$group[noInc] <- "noIncentive"
 elecObserveIncentive$group[-noInc] <- "Incentive"
 
+#this .csv shoudl be part of the data repository on github and should be located in the main repository like the wardnums experiment
+#every additional push we do, which may add more users, will have to ignore the users already assigned to a groups
 #write.csv
