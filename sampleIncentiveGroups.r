@@ -11,7 +11,7 @@ library(xtable)
 library(epicalc)
 library(stringr)
 #########################
-#Sample groups for incentiviation
+#Sample groups for incentivization
 #April 22, 2014
 #############################
 workd <- "/Volumes/Optibay-1TB/RSA_RCT/QA/LiveData/VIP-LivedData/"
