@@ -1,3 +1,4 @@
+rm(list=ls())
 library(stringr)
 library(plyr)
 library(xts) # also pulls in zoo
@@ -9,7 +10,7 @@ library(ggplot2)
 library(xtable)
 library(epicalc)
 library(stringr)
-rm(list=ls())
+
 ##Detect problems with ward lookup
 #############################
 
@@ -44,10 +45,10 @@ cat(sprintf("Now loading the exports file from most recent file \\begin{verbatim
 exportFile <- read.csv("contacts-export.csv", header=TRUE, stringsAsFactors=FALSE,  na.strings="")
 
 numObs <- nrow(exportFile)
-numAdd <- nrow(exportFile[!is.na(exportFile$extras.raw_user_address), ])
+numAdd <- nrow(exportFile[!is.na(exportFile$raw_user_address), ])
       
 #String match
-#exportFile$extras.raw_user_address
+#exportFile$raw_user_address
 
 #basic regular expression
 basicAddress <- "^[0-9]{1,5}[[:space:]]?[[:alpha:]]+"
@@ -175,65 +176,57 @@ print(xtable(
        table.placement="H"
       )
 
-
 ###Addrees Look Uo
-#first do manual cleanup
+##first do manual cleanup
 
-
-
-#if there is no second address use the first address
-addressSubset$cleanAddress <- NA
-addressSubset$cleanAddress[!is.na(addressSubset$raw_user_address_2)] <- tolower(addressSubset$raw_user_address_2[!is.na(addressSubset$raw_user_address_2)])
+## #if there is no second address use the first address
+## addressSubset$cleanAddress <- NA
+## addressSubset$cleanAddress[!is.na(addressSubset$raw_user_address_2)] <- tolower(addressSubset$raw_user_address_2[!is.na(addressSubset$raw_user_address_2)])
  
-addressSubset$cleanAddress[is.na(addressSubset$raw_user_address_2) & !is.na(addressSubset$raw_user_address)]  <-
-                                  tolower(addressSubset$raw_user_address[is.na(addressSubset$raw_user_address_2) & !is.na(addressSubset$raw_user_address)])
+## addressSubset$cleanAddress[is.na(addressSubset$raw_user_address_2) & !is.na(addressSubset$raw_user_address)]  <-
+##                                   tolower(addressSubset$raw_user_address[is.na(addressSubset$raw_user_address_2) & !is.na(addressSubset$raw_user_address)])
 
 
-cAdd <- addressSubset[!is.na(addressSubset$cleanAddress),]
+## cAdd <- addressSubset[!is.na(addressSubset$cleanAddress),]
 
-mainstr <- "[0-9]{1,4}[[:blank:]]?main.*pretoria>*"
+## mainstr <- "[0-9]{1,4}[[:blank:]]?main.*pretoria>*"
 
-#need text before or after can recoup. Everyone with nothing gets wiped
-wardstr <- "ward[[:blank:]]?[[0-9]{1,2}.*"
+## #need text before or after can recoup. Everyone with nothing gets wiped
+## wardstr <- "ward[[:blank:]]?[[0-9]{1,2}.*"
 
-wardstr2 <- "(^.*)(ward[[:blank:]]?[0-9]{1,2})(.*$)"
+## wardstr2 <- "(^.*)(ward[[:blank:]]?[0-9]{1,2})(.*$)"
 
-#cAdd[grepl(mainstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
-#cAdd[grepl(wardstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
+## #cAdd[grepl(mainstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
+## #cAdd[grepl(wardstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
 
-sprintf("The number of main streets or something similar in pretoria is %d", nrow(cAdd[grepl(mainstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
-                                                                                 )
-        )
+## sprintf("The number of main streets or something similar in pretoria is %d", nrow(cAdd[grepl(mainstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
+##                                                                                  )
+##         )
 
-sprintf("The number of people who enetered their ward # is %d", nrow(cAdd[grepl(wardstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
-                                                                                 )
-        )
+## sprintf("The number of people who enetered their ward # is %d", nrow(cAdd[grepl(wardstr, cAdd$cleanAddress), c("cleanAddress", "ward","wellFormed") ]
+##                                                                                  )
+##         )
 
-wards <- str_match(cAdd$cleanAddress, wardstr2)
+## wards <- str_match(cAdd$cleanAddress, wardstr2)
 
-cAdd$ward <- wards[,3]
-cAdd$otherWardInfo <- paste(wards[,2], wards[,4], sep =" ")
+## cAdd$ward <- wards[,3]
+## cAdd$otherWardInfo <- paste(wards[,2], wards[,4], sep =" ")
 
-#wards[!is.na(wards[,1]), ]
+##wards[!is.na(wards[,1]), ]
+##cAdd[!is.na(cAdd$ward), ]
+##doesn't likt the word village or stand
+##if there is a second address, use the second address
+##configure adi's flags
 
-#cAdd[!is.na(cAdd$ward), ]
-
-#doesn't likt the word village or stand
-
-#if there is a second address, use the second address
-
-#configure adi's flags
-
-
-#duplicate records
-duplicatedR <- t1[duplicated(t1$msisdn, fromLast=TRUE) | duplicated(t1$msisdn, fromLast=FALSE) , ]
-#head(duplicatedR[,c("msisdn", "delivery_class", "USSD_number")], 100)
-write.csv(duplicatedR[,c("msisdn", "delivery_class", "USSD_number")],
-                      file.path(rgroupsPath, "duplicatesinVumi.csv"))
-dupRec <- length(unique(duplicatedR$msisdn))
+##duplicate records
+##duplicatedR <- t1[duplicated(t1$msisdn, fromLast=TRUE) | duplicated(t1$msisdn, fromLast=FALSE) , ]
+##head(duplicatedR[,c("msisdn", "delivery_class", "USSD_number")], 100)
+##write.csv(duplicatedR[,c("msisdn", "delivery_class", "USSD_number")],
+##                      file.path(rgroupsPath, "duplicatesinVumi.csv"))
+##dupRec <- length(unique(duplicatedR$msisdn))
 ###########
 
-#output a csv of the address concerns
+##output a csv of the address concerns
 write.csv(addressSubset, file=paste0("AddressSubset","_", Sys.time(), ".csv"))
 
 ########
@@ -242,9 +235,11 @@ write.csv(addressSubset, file=paste0("AddressSubset","_", Sys.time(), ".csv"))
 registered <- exportFile[exportFile$is_registered %in% c("true"),  ]
 
 cat(sprintf("\\section{Answer And Win}"), "\nHere is the data from the Answer and Win Section:")
-cat("\n", sprintf("%d people have completed all of the questions in the VIP section", length(na.omit(registered$answerwin_complete)) ) ) 
 
 awQuest <- c("answerwin_question_gender", "answerwin_question_age", "answerwin_question_2009election", "answerwin_question_race")
+
+registered$awComplete <- apply(registered[, awQuest], 1, function(x) sum(!is.na(x)))
+
 
 for(qu in 1:length(awQuest)){
     regxtable <- tab1(registered[, awQuest[qu]], graph=FALSE)$output.table
@@ -272,7 +267,7 @@ for(qu in 1:length(awQuest)){
 }
 
 
-awFin <- length(na.omit(registered$answerwin_complete))
+awFin <- length(registered$awComplete[registered$awComplete==4])
 cat(sprintf("At total of %d people have finished the answer and win section, answering all the questions", awFin ))
 
 
@@ -318,7 +313,7 @@ cat(sprintf("\\section{What's up}"), "\nHere is the data from the What's up sect
 
 cat(sprintf("%d people have completed all of the questions in the What's Up section", length(na.omit(registered$whatsup_complete)) ) ) 
 
-wutUp <- grep("whatsup_question_", names(exportFile), value=TRUE)
+wutUp <- grep("^whatsup_question_", names(exportFile), value=TRUE)
 
 for(wu in 1:length(wutUp)){
     regxtable <- tab1(registered[, wutUp[wu]], graph=FALSE)$output.table
@@ -341,7 +336,7 @@ MyDatesTable <- table(cut(exportFile$posixTime, breaks="hour"))
 databyChannelUSSD <- as.data.frame.matrix(table(cut(exportFile$posixTime, breaks="hour"), as.factor(exportFile$combDeliverClass)))
 
 #need to expand code to automatically match channels
-names(databyChannelUSSD) <-c("c4279", "channel1", "channel2", "channel3", "channel8", "channelonlyhash", "c8864", "gtalk", "mxit", "twitter")
+names(databyChannelUSSD) <-c("vippoice2014", "c4279", "channel1", "channel2", "channel3", "channel8", "channelonlyhash", "c8864", "gtalk", "mxit", "twitter", "vipvoig_gmail")
 
 databyChannelUSSD$date <- as.POSIXct(rownames(databyChannelUSSD))
 

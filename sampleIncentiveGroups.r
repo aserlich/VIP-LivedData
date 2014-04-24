@@ -26,6 +26,7 @@ cat(sprintf("Now loading the exports file from most recent file \\begin{verbatim
 exportFile <- read.csv("contacts-export.csv", header=TRUE, stringsAsFactors=FALSE,  na.strings="")
 
 #do we want twitter people and what about people that just answered the engagement question?
+#yes, we want twitter users. We can't contacts people who just answered the enagement questions. 
 elecObserveIncentive <- exportFile[exportFile$is_registered %in% c("true") & exportFile$delivery_class %in% c("ussd", "twitter") & !(exportFile$msisdn %in% c("unknown")),
                                    c("msisdn", "is_registered", "delivery_class", "USSD_number", "key")]
 
@@ -48,7 +49,6 @@ elecObserveIncentive <- elecObserveIncentive[str_length(elecObserveIncentive$msi
 
 cat("There are", nrow(elecObserveIncentive), "total users with no errors in msisdn")
 
-#getmobuser
 
 #deal with duplicates
 elecObserveIncentive$duplicate <- 0
