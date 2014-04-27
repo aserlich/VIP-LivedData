@@ -10,6 +10,8 @@ library(ggplot2)
 library(xtable)
 library(epicalc)
 library(stringr)
+library(car)
+library(sjPlot)
 
 ##Detect problems with ward lookup
 #############################
@@ -85,6 +87,7 @@ print(xtable(table(exportFile$engagement_question)/numEng))
 cat("\n\n")
 
 ##Registration
+##THERE IS  A BUG HERE BECAUSE WE HAVE A FEW PEOPLE WHO DON"T HAVE A DELIVERY CLASS
 numReg = sum(exportFile$is_registered %in% c("true"), na.rm=TRUE)
 cat(sprintf("Of %d that answered the engagement question, %d or %f of the those **engaged** have answered the registeration question and agreed to the T&Cs.
 So we are losing %f here", numEng,numReg, numReg/numEng, (numEng-numReg)/numEng), "\n")
@@ -101,6 +104,62 @@ regbyChannel <- with(exportFile[!is.na(exportFile$delivery_class),], crosstab(is
 
 regbyChannel2 <- with(exportFile[!is.na(exportFile$combDeliverClass),], crosstab(is_registered, combDeliverClass, chisq=TRUE, prop.c=TRUE, prop.r=TRUE, plot=FALSE))
 
+#*120*7692*2#	Standard Rates
+#*120*4729#2	Free
+#*120*7692*3#	Stand a chance to win
+
+threechannels <- c("*120*7692*2#", "*120*4729#", "*120*7692*3#")
+
+ussdex <- exportFile[exportFile$USSD_number %in% threechannels, ]
+
+
+notthree <- -which(unique(ussdex$USSD_number) %in% threechannels)]
+
+ussdex$ussdChannel <- car::Recode(ussdex$USSD_number,
+                                  " '*120*7692*2#' = 'Standard Rates' ;
+                                    '*120*4729#' = 'Free' ;
+                                    '*120*7692*3#' = 'Lottery'
+                                     "
+)
+
+library(scales)
+
+
+awQuest <- c("answerwin_question_gender", "answerwin_question_age", "answerwin_question_2009election", "answerwin_question_race")
+
+
+## ggplot(ussdex[!is.na(ussdex$answerwin_question_race), ], aes(as.factor(answerwin_question_race), fill=USSD_number)) + geom_bar(position = "dodge") +  scale_y_continuous(labels = percent)
+##     xlab("Average Slope (Degrees)")
+## +ylab("Plots (#)")
+Pause <- function () { 
+    cat("Hit <enter> to continue...")
+    readline()
+    invisible()
+}
+
+
+ggplot(ussdex[!is.na(ussdex$answerwin_question_race), ], aes(as.factor(answerwin_question_race), fill=USSDChannel)) + facet_grid(~USSDChannel)
+
+
+for(i in 1:length(awQuest)) {
+    sjp.grpfrq(as.factor(ussdex[!is.na(ussdex[, awQuest[i]]),awQuest[i] ] ),
+               as.factor(ussdex[!is.na(ussdex[, awQuest[i]]), "ussdChannel" ] ),
+               startAxisAt=0, na.rm=TRUE,
+               useFacetGrid=TRUE)
+  Pause()
+
+
+}
+sjp.grpfrq(as.factor(ussdex$answerwin_question_race[!is.na(ussdex$answerwin_question_race)]), as.factor(ussdex$ussdChannel[!is.na(ussdex$answerwin_question_race)]), startAxisAt=0, na.rm=TRUE)
+
+
+sjp.grpfrq(as.factor(ussdex$answerwin_question_race[!is.na(ussdex$answerwin_question_race)]), as.factor(ussdex$ussdChannel[!is.na(ussdex$answerwin_question_race)]), startAxisAt=0, na.rm=TRUE,
+useFacetGrid=TRUE)
+
+
+df <- ddply(ussdex[!is.na(ussdex$answerwin_question_race), ], .(test1), transform, p = Freq/sum(Freq))
+# and plot
+ggplot(df, aes(test2, p))+geom_bar()+facet_grid(~test1)
 
 regbyChannelxtab <- xtable(regbyChannel2, caption="Accept T&Cs by Channel") #usepackage{float} in tex
 
@@ -236,7 +295,6 @@ registered <- exportFile[exportFile$is_registered %in% c("true"),  ]
 
 cat(sprintf("\\section{Answer And Win}"), "\nHere is the data from the Answer and Win Section:")
 
-awQuest <- c("answerwin_question_gender", "answerwin_question_age", "answerwin_question_2009election", "answerwin_question_race")
 
 registered$awComplete <- apply(registered[, awQuest], 1, function(x) sum(!is.na(x)))
 
