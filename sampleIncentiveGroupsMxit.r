@@ -27,13 +27,14 @@ exportFile <- read.csv("contacts-export.csv", header=TRUE, stringsAsFactors=FALS
 
 setwd(workd)
 
-alreadyContacted <- list.files(path=workd, pattern ="monitorPush2014.*")
+alreadyContacted <- list.files(path=workd, pattern ="monitorPush.*2014.*csv$")
 
 for(f in 1:length(alreadyContacted)) {
     if(f==1){
-       ac <- read.csv(alreadyContacted[f], header=TRUE, stringsAsFactors=FALSE, colClasses="character")
+       ac <- read.csv(alreadyContacted[[f]], header=TRUE, stringsAsFactors=FALSE, colClasses="character")[ , "msisdn"]
    } else {
-       ac <- rbind(ac, read.csv(alreadyContacted[f], header=TRUE, stringsAsFactors=FALSE, colClasses="character"))
+       ac2 <- read.csv(alreadyContacted[[f]], header=TRUE, stringsAsFactors=FALSE, colClasses="character")[, "msisdn"]
+       ac <- c(ac,ac2)
    }
 }
 
@@ -62,7 +63,7 @@ mobiUser[, c("created_at", "awComplete", awQuest)] <- NA
 elecObserveIncentive <- rbind(elecObserveIncentive, mobiUser)
 
 #remove those that have already been contacted including mobi users
-elecObserveIncentive <- elecObserveIncentive[!(elecObserveIncentive$msisdn %in% ac$msisdn), ]
+
 
 cat("There are", nrow(mobiUser), "mobi users")
 
@@ -90,11 +91,23 @@ elecObserveIncentive <- elecObserveIncentive[elecObserveIncentive$validNum ==1, 
 
 #head(elecObserveIncentive[ , c("msisdn", "awComplete", "is_registered", "validNum")]
 
+
+elecObserveIncentive <- elecObserveIncentive[, -which(names(elecObserveIncentive) %in% awQuest)]
+
+#NOTE THERE WAS A BUG in this FILE on the earilire pushes for non USSD channels
+##27th push and we could have accidently recontacted several people in different incentive groups or the same
+#This should apply to a small number of people.
+##   mobi    mxit twitter    ussd 
+##     36    1053       1     166 
+
+##   mobi    mxit twitter    ussd 
+##    36    1142       4     166 
+elecObserveIncentive <- elecObserveIncentive[!(elecObserveIncentive$msisdn %in% ac), ]
+
+
 cat("There are", nrow(elecObserveIncentive[elecObserveIncentive$validNumComp==1,]), "total users with no errors in msisdn")
 cat("There are", nrow(elecObserveIncentive), "total new users")
 print(table(elecObserveIncentive$delivery_class))
-
-elecObserveIncentive <- elecObserveIncentive[, -which(names(elecObserveIncentive) %in% awQuest)]
 
 #these people have both USSD numbers and are being delivered by mxit
 #elecObserveIncentive[!is.na(elecObserveIncentive$USSD_number), ]
@@ -109,6 +122,10 @@ elecObserveIncentive$group[noIncNonDups] <- "noIncentive"
 elecObserveIncentive$group[-noIncNonDups] <- "Incentive"
 
 elecObserveIncentive <- elecObserveIncentive[with(elecObserveIncentive, order(group, delivery_class)), ]
+
+cat("There are", nrow(elecObserveIncentive[elecObserveIncentive$validNumComp==1,]), "total users with no errors in msisdn")
+cat("There are", nrow(elecObserveIncentive), "total new users")
+print(table(elecObserveIncentive$delivery_class))
 
 
 #this .csv shoudl be part of the data repository on github and should be located in the main repository like the wardnums experiment

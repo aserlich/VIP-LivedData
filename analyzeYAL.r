@@ -8,6 +8,8 @@ exports <- list.files(path=path3, pattern ="yalExport_2014.*csv$")
 
 myfile <-  tail(exports,1)[1]
 
+cat("reading", myfile)
+
 yaldf <- read.csv(file=file.path(path3,myfile), header=TRUE, stringsAsFactor=FALSE, colClasses="character")
 
 questions <- ( unique(yaldf$question))

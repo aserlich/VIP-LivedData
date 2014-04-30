@@ -113,7 +113,7 @@ threechannels <- c("*120*7692*2#", "*120*4729#", "*120*7692*3#")
 ussdex <- exportFile[exportFile$USSD_number %in% threechannels, ]
 
 
-notthree <- -which(unique(ussdex$USSD_number) %in% threechannels)]
+notthree <- -which(unique(ussdex$USSD_number) %in% threechannels)
 
 ussdex$ussdChannel <- car::Recode(ussdex$USSD_number,
                                   " '*120*7692*2#' = 'Standard Rates' ;
@@ -122,15 +122,33 @@ ussdex$ussdChannel <- car::Recode(ussdex$USSD_number,
                                      "
 )
 
+
+##CSOS
+
+cat(sprintf("\\section{CSOs}"), "\nHere are the results of the randomizaton", "\n"))
+
+csodir <- "/Volumes/Optibay-1TB/RSA_RCT/QA/CSOs"
+csos <- read.csv(file.path(csodir, "Total CSO Observers - Total CSO Observers.csv"))
+
+cat(sprintf("There are %d CSOs currently for whom we have phone numbers", nrow(cs
+csos$msisdn <- paste0("+", csos$Mobile..)
+engCsos <- csos[csos$msisdn %in% exportFile$msisdn, ]
+
+
+                 
+
+#############
+###Viz stuff
+###########
 library(scales)
 
 
 awQuest <- c("answerwin_question_gender", "answerwin_question_age", "answerwin_question_2009election", "answerwin_question_race")
 
 
-## ggplot(ussdex[!is.na(ussdex$answerwin_question_race), ], aes(as.factor(answerwin_question_race), fill=USSD_number)) + geom_bar(position = "dodge") +  scale_y_continuous(labels = percent)
-##     xlab("Average Slope (Degrees)")
-## +ylab("Plots (#)")
+## ## ggplot(ussdex[!is.na(ussdex$answerwin_question_race), ], aes(as.factor(answerwin_question_race), fill=USSD_number)) + geom_bar(position = "dodge") +  scale_y_continuous(labels = percent)
+## ##     xlab("Average Slope (Degrees)")
+## ## +ylab("Plots (#)")
 Pause <- function () { 
     cat("Hit <enter> to continue...")
     readline()
@@ -138,29 +156,32 @@ Pause <- function () {
 }
 
 
-ggplot(ussdex[!is.na(ussdex$answerwin_question_race), ], aes(as.factor(answerwin_question_race), fill=USSDChannel)) + facet_grid(~USSDChannel)
+## ggplot(ussdex[!is.na(ussdex$answerwin_question_race), ], aes(as.factor(answerwin_question_race), fill=USSDChannel)) + facet_grid(~USSDChannel)
 
 
-for(i in 1:length(awQuest)) {
-    sjp.grpfrq(as.factor(ussdex[!is.na(ussdex[, awQuest[i]]),awQuest[i] ] ),
-               as.factor(ussdex[!is.na(ussdex[, awQuest[i]]), "ussdChannel" ] ),
-               startAxisAt=0, na.rm=TRUE,
-               useFacetGrid=TRUE)
-  Pause()
+## for(i in 1:length(awQuest)) {
+##     sjp.grpfrq(as.factor(ussdex[!is.na(ussdex[, awQuest[i]]),awQuest[i] ] ),
+##                as.factor(ussdex[!is.na(ussdex[, awQuest[i]]), "ussdChannel" ] ),
+##                startAxisAt=0, na.rm=TRUE,
+##                useFacetGrid=TRUE)
+##   Pause()
 
 
-}
-sjp.grpfrq(as.factor(ussdex$answerwin_question_race[!is.na(ussdex$answerwin_question_race)]), as.factor(ussdex$ussdChannel[!is.na(ussdex$answerwin_question_race)]), startAxisAt=0, na.rm=TRUE)
+## }
+## sjp.grpfrq(as.factor(ussdex$answerwin_question_race[!is.na(ussdex$answerwin_question_race)]), as.factor(ussdex$ussdChannel[!is.na(ussdex$answerwin_question_race)]), startAxisAt=0, na.rm=TRUE)
 
 
-sjp.grpfrq(as.factor(ussdex$answerwin_question_race[!is.na(ussdex$answerwin_question_race)]), as.factor(ussdex$ussdChannel[!is.na(ussdex$answerwin_question_race)]), startAxisAt=0, na.rm=TRUE,
-useFacetGrid=TRUE)
+## sjp.grpfrq(as.factor(ussdex$answerwin_question_race[!is.na(ussdex$answerwin_question_race)]), as.factor(ussdex$ussdChannel[!is.na(ussdex$answerwin_question_race)]), startAxisAt=0, na.rm=TRUE,
+## useFacetGrid=TRUE)
 
 
-df <- ddply(ussdex[!is.na(ussdex$answerwin_question_race), ], .(test1), transform, p = Freq/sum(Freq))
+#df <- ddply(ussdex[!is.na(ussdex$answerwin_question_race), ], .(test1), transform, p = Freq/sum(Freq))
 # and plot
-ggplot(df, aes(test2, p))+geom_bar()+facet_grid(~test1)
+#ggplot(df, aes(test2, p))+geom_bar()+facet_grid(~test1)
 
+
+
+############
 regbyChannelxtab <- xtable(regbyChannel2, caption="Accept T&Cs by Channel") #usepackage{float} in tex
 
 #doesn't work -- coudl change the factor in delivery class

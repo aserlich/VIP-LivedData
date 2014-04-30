@@ -52,9 +52,26 @@ validateid<-function(idnumberstring){
 }
 
 path2 <- "/Volumes/Optibay-1TB/RSA_RCT/QA/LiveData/ObserverRecruitment"
-myfile <- "obs-contacts-export-incentivized_2014_04_24_8:34.csv"
-inc <- read.csv(file=file.path(path2,myfile), header=TRUE, stringsAsFactor=FALSE, na.strings="")
 
+myfile <- list()
+myfile[[1]] <- "obs-contacts-export-incentivized_2014_04_24_8:34.csv"
+myfile[[2]] <- "incentivesMxitGroup2014-04-27.csv"
+myfile[[3]] <- "NoIncentiveGroup2014-04-26.csv"
+myfile[[4]] <- "NoIncentivesMxitgroup2014-04-28.csv"
+myfile[[5]] <- "noIncentiveGroup2014-04-28.csv"
+inc <- read.csv(file=file.path(path2,myfile[[1]][1]), header=TRUE, stringsAsFactor=FALSE, na.strings="")
+for(f in 1:(length(myfile)-1)) {
+    inc <- rbind(inc,
+                 read.csv(file=file.path(path2,myfile[[f+1]][1]), header=TRUE, stringsAsFactor=FALSE, na.strings="")
+                 )
+    print(cat("this is the nmber of row:", nrow(inc), myfile[[f+1]][1]))
+                 
+}
+
+inc$name[inc$name == "noIncentiveMxitgroup"] <- "noIncentive"
+
+inc[!(inc$name %in% c("noIncentive", "Incentive")), c("key", "name", "msisdn")]
+inc$name[!(inc$name %in% c("noIncentive", "Incentive"))] <- NA
 
 inc$obstownsuburb[!is.na(inc$obstownsuburb)]
 length(inc$obsvotingstation[!is.na(inc$obsvotingstation)])
@@ -70,6 +87,8 @@ inc$validid <- unlist(sapply(inc$finalID, validateid))
 
 inc2 <- inc[inc$validid  | (!is.na(inc$obsvotingstation) & str_length(inc$obsvotingstation) > 5), ]
 
+prov <- c("limp", "wcape", "ec", "fs", "kzn", "mp", "nwest", "ncape", "gp")
+error <- setdiff(unique(inc2$obsprovince),prov )
 
 inc2$province2 <- car::Recode(inc2$obsprovince,
                          "
@@ -81,7 +100,8 @@ inc2$province2 <- car::Recode(inc2$obsprovince,
   'nwest' = 'Northwest Province';
   'wcape' = 'Western Cape';
   'ncape'= 'Northern Cape';
-  'gp' = 'Gauteng'
+  'gp' = 'Gauteng';
+   error = NA
  "
                          , as.factor.result=TRUE)
 
